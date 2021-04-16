@@ -56,7 +56,7 @@ $c1 = '
 <div style="font-size:1.2em;">
 <br>
 <ul>
-<li>All sequences in each included transcriptome database have been mapped to each of the three reference databases listed in the last drop-down (smed_2010614, SMEST, SMESG).</li>
+<li>All sequences in each included transcriptome database have been mapped to each of the two reference databases sets listed in the last drop-down (smed_2010614, dd_Smes_v2). The transcripts (SMEST) and the gene models (SMESG) in dd_Smes_v2 can be listed separately.</li>
 
 <li>How Rosetta Stone Transcript Mapper Works:
  <ol style="position: relative;left: 10px;">
@@ -66,6 +66,7 @@ $c1 = '
    <li>Identifies all other IDs that also map to this reference sequence (in results: "Homolog Accession" column).</li>
    <li>Results are limited to transcriptome databases you select in the drop-down (in results: "Homolog Accession DB" column).</li>
 </ol></li>
+<li>Download complete mapping table: <a  style="color:#32821f;" href="https://planosphere.stowers.org/pub/analysis/rosetta/smed_20140614.mapping.rosettastone.2020/smed_20140614.mapping.rosettastone.2020.txt">smed_20140614.mapping.rosettastone.2020.txt</a></li>
 <li>SMEST and SMESG descriptions where downloaded from Planmine</li>
 <li>Last Update May 2020</li>
 </ul>
@@ -111,9 +112,9 @@ print("<p></p>");
                         <label style="font-size:1.2em;">Select a reference database: <br>
 <select name="ref_seq_type" id="ref_seq_type">
 <option value='smed_20140614'>Sánchez Alvarado lab, smed_20140614, 2014 (Planosphere) (smed_20140614)</option>
-<option value='SMESG_dd_Smes_v2'>Rink lab, SMESG_dd_Smes_v2 (Planmine) (SMESG_dd_Smes_v2)</option>
-<option value='SMEST_dd_Smes_v2'>Rink lab, SMEST_dd_Smes_v2 (Planmine) (SMEST_dd_Smes_v2)</option>
-</select><div style="font-family=Oswald;font-weight: 300;font-style: normal;">Input IDs and transcriptome DBs are mapped to the selected reference</div><br><br>
+<option value='SMESG_dd_Smes_v2'>Rink lab, gene models dd_Smes_v2 (Planmine) (SMESG_dd_Smes_v2)</option>
+<option value='SMEST_dd_Smes_v2'>Rink lab, transcripts dd_Smes_v2 (Planmine) (SMEST_dd_Smes_v2)</option>
+</select><div style="font-family=Oswald;font-weight: 300;font-style: normal;">Input IDs and transcriptome DBs are mapped to the selected transcript reference or gene model set</div><br><br>
                         </label>
 
 
@@ -141,8 +142,8 @@ print("<p></p>");
 <option value='bo_Smed_v1'>Reddien lab, Srivastava et al., 2014 (Planmine) (bo_Smed_v1)</option>
 <option value='GPL14150'>Reddien Lab, microarray, Wenermoser et al., 2012 (GPL14150)</option>
 <option value='GPL14150_gene_models'>Reddien Lab, gene models, Wenermoser et al., 2012(GPL14150_gene_models)</option>
-<option value='SMESG_dd_Smes_v2'>Rink lab, SMESG_dd_Smes_v2 (Planmine) (SMESG_dd_Smes_v2)</option>
-<option value='SMEST_dd_Smes_v2'>Rink lab, SMEST_dd_Smes_v2 (Planmine) (SMEST_dd_Smes_v2)</option>
+<option value='SMESG_dd_Smes_v2'>Rink lab, gene models dd_Smes_v2 (Planmine) (SMESG_dd_Smes_v2)</option>
+<option value='SMEST_dd_Smes_v2'>Rink lab, transcripts dd_Smes_v2 (Planmine) (SMEST_dd_Smes_v2)</option>
 <option value='dd_Smed_v6'>Rink lab, Dresden V6 (Planmine) (dd_Smed_v6)</option>
 <option value='dd_Smed_v4'>Rink lab, Dresden V4 (Planmine) (dd_Smed_v4)</option>
 <option value='dd_Smes_v1'>Rink lab, SMES V1 (Planmine) (dd_Smes_v1)</option>
@@ -198,9 +199,10 @@ elseif( empty ($_POST["db_ids"])){
 }else{
 
 $q = $_POST["q"];
+$lc_q = strtolower($q);
 $transcripts = trim($transcripts);
-$transcripts = preg_split('/[\s+\n\,]+/', $q);
-$these_transcripts = " VALUES ?accession { '". implode("'^^string: '", $transcripts) . "'^^string:} ";
+$transcripts = preg_split('/[\s+\n\,]+/', $lc_q);
+$these_transcripts = " VALUES ?lc { '". implode("'^^string: '", $transcripts) . "'^^string:} ";
 
 $db_ids=$_POST["db_ids"];
 
@@ -218,13 +220,14 @@ PREFIX dc: <http://purl.org/dc/elements/1.1/>
 PREFIX description: <http://purl.obolibrary.org/obo/IAO_0000115> 
 SELECT DISTINCT  ?ref_seq ?accession ?source ?accession2 ?source2 ?description
 WHERE {  
-?a1 oban:association_has_predicate PAGE:has_mapping_reference_id ; 
+?a1 oban:association_has_object_property PAGE:has_mapping_reference_id ; 
   oban:association_has_subject ?accession ; 
   oban:association_has_object ?ref_seq ; 
+  PAGE:lc_accession  ?lc ; 
   PAGE:has_reference_source '$ref_seq_type'^^string: ; 
   dc:source ?source . 
 $these_transcripts . 
-?a2 oban:association_has_predicate PAGE:has_mapping_reference_id ; 
+?a2 oban:association_has_object_property PAGE:has_mapping_reference_id ; 
   oban:association_has_subject ?accession2 ; 
   oban:association_has_object ?ref_seq ; 
   PAGE:has_reference_source '$ref_seq_type'^^string: ; 
